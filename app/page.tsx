@@ -187,12 +187,21 @@ export default function Home() {
               MCP<span className="gradient-text">Blitz</span>
             </span>
           </div>
-          <a
-            href="https://mcpfed.com"
-            className="text-sm text-zinc-400 hover:text-white transition-colors"
-          >
-            Advanced Setup →
-          </a>
+          <div className="flex items-center gap-4">
+            <a
+              href="/chat"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-orange-500/10 text-orange-500 text-sm font-medium hover:bg-orange-500/20 transition-colors"
+            >
+              <Bot className="w-4 h-4" />
+              Try AI Chat
+            </a>
+            <a
+              href="https://mcpfed.com"
+              className="text-sm text-zinc-400 hover:text-white transition-colors"
+            >
+              Advanced Setup →
+            </a>
+          </div>
         </div>
       </header>
 
@@ -456,8 +465,29 @@ export default function Home() {
                 </ol>
               </div>
 
+              {/* Try AI Chat CTA */}
+              <div className="mt-6 p-4 rounded-xl bg-gradient-to-r from-orange-500/10 to-red-500/10 border border-orange-500/20">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-semibold flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-orange-500" />
+                      Try AI-Powered Chat
+                    </h3>
+                    <p className="text-sm text-zinc-400 mt-1">
+                      Talk to your tools using natural language
+                    </p>
+                  </div>
+                  <a
+                    href="/chat"
+                    className="px-4 py-2 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg font-medium text-sm hover:opacity-90 transition-opacity"
+                  >
+                    Launch Chat
+                  </a>
+                </div>
+              </div>
+
               {/* Upsell */}
-              <div className="mt-6 text-center">
+              <div className="mt-4 text-center">
                 <p className="text-sm text-zinc-500">
                   Want more advanced features?{" "}
                   <a href="https://mcpfed.com" className="text-orange-500 hover:underline">
