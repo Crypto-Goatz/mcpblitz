@@ -1,26 +1,115 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: 10 10 10;
+  --foreground: 250 250 250;
+  --card: 18 18 18;
+  --primary: 249 115 22;
+  --primary-hover: 234 88 12;
+  --border: 38 38 38;
+  --muted: 115 115 115;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-background: rgb(var(--background));
+  --color-foreground: rgb(var(--foreground));
+  --color-card: rgb(var(--card));
+  --color-primary: rgb(var(--primary));
+  --color-primary-hover: rgb(var(--primary-hover));
+  --color-border: rgb(var(--border));
+  --color-muted: rgb(var(--muted));
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+body {
+  background: rgb(var(--background));
+  color: rgb(var(--foreground));
+  font-family: system-ui, -apple-system, sans-serif;
+  min-height: 100vh;
+}
+
+/* Gradient background */
+.bg-gradient-radial {
+  background: radial-gradient(ellipse at top, rgba(249,115,22,0.15) 0%, transparent 50%),
+              radial-gradient(ellipse at bottom right, rgba(239,68,68,0.1) 0%, transparent 40%),
+              rgb(var(--background));
+}
+
+/* Wizard step animation */
+.wizard-enter {
+  animation: wizardEnter 0.4s ease-out;
+}
+
+@keyframes wizardEnter {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, #f97316, #ef4444);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Tool card */
+.tool-card {
+  transition: all 0.2s ease;
+  border: 2px solid rgb(var(--border));
+  background: rgb(var(--card));
+}
+
+.tool-card:hover {
+  border-color: rgb(var(--muted));
+}
+
+.tool-card.selected {
+  border-color: rgb(var(--primary));
+  background: rgba(249,115,22,0.1);
+}
+
+/* Glow button */
+.btn-glow {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-glow::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  background: linear-gradient(135deg, #f97316, #ef4444);
+  border-radius: inherit;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.3s;
+  filter: blur(8px);
+}
+
+.btn-glow:hover::before {
+  opacity: 0.5;
+}
+
+/* Progress bar */
+.progress-fill {
+  background: linear-gradient(90deg, #f97316, #ef4444);
+  transition: width 0.5s ease;
+}
+
+/* Logo animation */
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.logo-pulse:hover {
+  animation: pulse 0.6s ease-in-out;
 }
