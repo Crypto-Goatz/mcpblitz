@@ -2,149 +2,383 @@
 
 import { useState } from "react";
 import {
-  Zap, ArrowRight, Check, Database, BarChart3,
-  Globe, Rocket, Users, Mail, Calendar,
+  Zap, ArrowRight, Check, Users, Mail, Globe,
   CreditCard, FileText, Bot, Sparkles, Download,
-  Terminal, Copy, CheckCircle2
+  Copy, CheckCircle2, MessageSquare, BarChart3,
+  Calendar, ShoppingCart, Megaphone, PenTool,
+  Database, Rocket, ChevronDown, ChevronUp, Star
 } from "lucide-react";
 import LogoWall from "./components/logo-wall";
 
-// Available MCP tools with their free/paid status
-const MCP_TOOLS = {
-  analytics: {
-    id: "ga4-analytics",
-    name: "Google Analytics",
-    description: "Traffic insights & user behavior",
-    icon: BarChart3,
-    free: true,
-    category: "analytics",
-    config: {
-      command: "uvx",
-      args: ["--from", "google-analytics-mcp", "ga4-mcp-server"],
-    }
-  },
-  database: {
-    id: "supabase",
-    name: "Supabase",
-    description: "Database & backend",
-    icon: Database,
-    free: true,
-    category: "database",
-    config: {
-      type: "http",
-      url: "https://mcp.supabase.com/mcp",
-    }
-  },
-  hosting: {
-    id: "vercel",
-    name: "Vercel",
-    description: "Deployments & hosting",
-    icon: Globe,
-    free: true,
-    category: "hosting",
-    config: {
-      command: "npx",
-      args: ["-y", "vercel-mcp"],
-    }
-  },
-  crm: {
-    id: "rocket-plus",
-    name: "Rocket+ CRM",
-    description: "Contacts, deals & automation",
-    icon: Rocket,
-    free: false,
-    category: "crm",
-    config: {
-      command: "npx",
-      args: ["-y", "rocket-plus-mcp"],
-    }
-  },
-  email: {
-    id: "resend",
-    name: "Email (Resend)",
-    description: "Send & track emails",
-    icon: Mail,
-    free: true,
-    category: "communication",
-    config: {
-      command: "npx",
-      args: ["-y", "@resend/mcp"],
-    }
-  },
-  calendar: {
-    id: "google-calendar",
-    name: "Google Calendar",
-    description: "Events & scheduling",
-    icon: Calendar,
-    free: true,
-    category: "productivity",
-    config: {
-      command: "npx",
-      args: ["-y", "google-calendar-mcp"],
-    }
-  },
-  payments: {
-    id: "stripe",
-    name: "Stripe",
-    description: "Payments & subscriptions",
-    icon: CreditCard,
-    free: true,
-    category: "payments",
-    config: {
-      command: "npx",
-      args: ["-y", "stripe-mcp"],
-    }
-  },
-  docs: {
-    id: "notion",
-    name: "Notion",
-    description: "Notes & documentation",
-    icon: FileText,
-    free: true,
-    category: "productivity",
-    config: {
-      command: "npx",
-      args: ["-y", "notion-mcp"],
-    }
-  },
-};
+// ============================================================
+// OUTCOME-BASED WIZARD
+// Users tell us WHAT they want to do, we recommend the tools
+// ============================================================
 
-type Role = "business" | "marketer" | "developer" | "manager" | null;
-type Step = "welcome" | "role" | "tools" | "generating" | "complete";
+interface ToolOption {
+  id: string;
+  name: string;
+  auto?: boolean;  // AI Recommended
+  reason: string;
+  config: {
+    command?: string;
+    args?: string[];
+    type?: string;
+    url?: string;
+    env?: Record<string, string>;
+  };
+}
+
+interface Outcome {
+  id: string;
+  title: string;
+  description: string;
+  icon: React.ElementType;
+  category: string;
+  tools: ToolOption[];
+}
+
+// What users can DO (outcomes) mapped to tool recommendations
+const OUTCOMES: Outcome[] = [
+  {
+    id: "manage-leads",
+    title: "Manage contacts & leads",
+    description: "Track leads, manage contacts, organize your CRM",
+    icon: Users,
+    category: "CRM & Sales",
+    tools: [
+      {
+        id: "rocket-plus",
+        name: "Rocket+",
+        auto: true,
+        reason: "56+ CRM tools, contacts, pipelines, tags, workflows",
+        config: { command: "npx", args: ["-y", "rocket-plus-mcp"] }
+      },
+      {
+        id: "hubspot",
+        name: "HubSpot",
+        reason: "Popular CRM with marketing features",
+        config: { command: "npx", args: ["-y", "hubspot-mcp"] }
+      },
+      {
+        id: "salesforce",
+        name: "Salesforce",
+        reason: "Enterprise CRM platform",
+        config: { command: "npx", args: ["-y", "salesforce-mcp"] }
+      },
+    ]
+  },
+  {
+    id: "send-messages",
+    title: "Send emails & SMS",
+    description: "Automated follow-ups, campaigns, notifications",
+    icon: Mail,
+    category: "Communication",
+    tools: [
+      {
+        id: "rocket-plus",
+        name: "Rocket+",
+        auto: true,
+        reason: "SMS, email, and conversations via GHL",
+        config: { command: "npx", args: ["-y", "rocket-plus-mcp"] }
+      },
+      {
+        id: "resend",
+        name: "Resend",
+        reason: "Developer-friendly transactional email",
+        config: { command: "npx", args: ["-y", "@resend/mcp"] }
+      },
+      {
+        id: "twilio",
+        name: "Twilio",
+        reason: "SMS and voice APIs",
+        config: { command: "npx", args: ["-y", "twilio-mcp"] }
+      },
+    ]
+  },
+  {
+    id: "create-content",
+    title: "Generate content & blogs",
+    description: "AI-written blogs, social posts, marketing copy",
+    icon: PenTool,
+    category: "Content",
+    tools: [
+      {
+        id: "rocket-plus",
+        name: "Rocket+",
+        auto: true,
+        reason: "Content AI with blog + social post generation",
+        config: { command: "npx", args: ["-y", "rocket-plus-mcp"] }
+      },
+      {
+        id: "notion",
+        name: "Notion",
+        reason: "Notes and content management",
+        config: { command: "npx", args: ["-y", "notion-mcp"] }
+      },
+    ]
+  },
+  {
+    id: "build-website",
+    title: "Build landing pages & websites",
+    description: "Create and deploy web pages",
+    icon: Globe,
+    category: "Web",
+    tools: [
+      {
+        id: "vercel",
+        name: "Vercel",
+        auto: true,
+        reason: "Fast deployments, preview URLs, hosting",
+        config: { command: "npx", args: ["-y", "vercel-mcp"] }
+      },
+      {
+        id: "webflow",
+        name: "Webflow",
+        reason: "Visual website builder",
+        config: { command: "npx", args: ["-y", "webflow-mcp"] }
+      },
+      {
+        id: "rocket-plus",
+        name: "Rocket+ Canvas",
+        reason: "Landing page builder with GHL integration",
+        config: { command: "npx", args: ["-y", "rocket-plus-mcp"] }
+      },
+    ]
+  },
+  {
+    id: "take-payments",
+    title: "Accept payments",
+    description: "Payment links, invoices, subscriptions",
+    icon: CreditCard,
+    category: "Payments",
+    tools: [
+      {
+        id: "stripe",
+        name: "Stripe",
+        auto: true,
+        reason: "Industry standard for payments",
+        config: { command: "npx", args: ["-y", "stripe-mcp"] }
+      },
+      {
+        id: "rocket-plus",
+        name: "Rocket+",
+        reason: "GHL invoicing and payment links",
+        config: { command: "npx", args: ["-y", "rocket-plus-mcp"] }
+      },
+      {
+        id: "paypal",
+        name: "PayPal",
+        reason: "Widely accepted payment platform",
+        config: { command: "npx", args: ["-y", "paypal-mcp"] }
+      },
+    ]
+  },
+  {
+    id: "schedule-meetings",
+    title: "Schedule appointments",
+    description: "Calendars, bookings, reminders",
+    icon: Calendar,
+    category: "Scheduling",
+    tools: [
+      {
+        id: "rocket-plus",
+        name: "Rocket+",
+        auto: true,
+        reason: "GHL calendars with contact integration",
+        config: { command: "npx", args: ["-y", "rocket-plus-mcp"] }
+      },
+      {
+        id: "google-calendar",
+        name: "Google Calendar",
+        reason: "Widely used calendar",
+        config: { command: "npx", args: ["-y", "google-calendar-mcp"] }
+      },
+      {
+        id: "calendly",
+        name: "Calendly",
+        reason: "Scheduling automation",
+        config: { command: "npx", args: ["-y", "calendly-mcp"] }
+      },
+    ]
+  },
+  {
+    id: "run-marketing",
+    title: "Run marketing campaigns",
+    description: "Funnels, automations, A/B testing",
+    icon: Megaphone,
+    category: "Marketing",
+    tools: [
+      {
+        id: "rocket-plus",
+        name: "Rocket+",
+        auto: true,
+        reason: "Full marketing suite - funnels, workflows, campaigns",
+        config: { command: "npx", args: ["-y", "rocket-plus-mcp"] }
+      },
+      {
+        id: "mailchimp",
+        name: "Mailchimp",
+        reason: "Email marketing platform",
+        config: { command: "npx", args: ["-y", "mailchimp-mcp"] }
+      },
+    ]
+  },
+  {
+    id: "track-analytics",
+    title: "Track analytics & metrics",
+    description: "Website traffic, conversions, reporting",
+    icon: BarChart3,
+    category: "Analytics",
+    tools: [
+      {
+        id: "ga4",
+        name: "Google Analytics",
+        auto: true,
+        reason: "Industry standard for web analytics",
+        config: { command: "uvx", args: ["--from", "google-analytics-mcp", "ga4-mcp-server"] }
+      },
+      {
+        id: "rocket-plus",
+        name: "Rocket+",
+        reason: "CRM analytics and AI insights",
+        config: { command: "npx", args: ["-y", "rocket-plus-mcp"] }
+      },
+    ]
+  },
+  {
+    id: "manage-data",
+    title: "Store & manage data",
+    description: "Databases, spreadsheets, knowledge bases",
+    icon: Database,
+    category: "Data",
+    tools: [
+      {
+        id: "supabase",
+        name: "Supabase",
+        auto: true,
+        reason: "Postgres database with realtime & auth",
+        config: { type: "http", url: "https://mcp.supabase.com/mcp" }
+      },
+      {
+        id: "airtable",
+        name: "Airtable",
+        reason: "Spreadsheet-database hybrid",
+        config: { command: "npx", args: ["-y", "airtable-mcp"] }
+      },
+      {
+        id: "google-sheets",
+        name: "Google Sheets",
+        reason: "Collaborative spreadsheets",
+        config: { command: "npx", args: ["-y", "google-sheets-mcp"] }
+      },
+    ]
+  },
+  {
+    id: "sell-online",
+    title: "Sell products online",
+    description: "E-commerce, inventory, orders",
+    icon: ShoppingCart,
+    category: "E-commerce",
+    tools: [
+      {
+        id: "shopify",
+        name: "Shopify",
+        auto: true,
+        reason: "Leading e-commerce platform",
+        config: { command: "npx", args: ["-y", "shopify-mcp"] }
+      },
+      {
+        id: "stripe",
+        name: "Stripe",
+        reason: "Payment processing for products",
+        config: { command: "npx", args: ["-y", "stripe-mcp"] }
+      },
+    ]
+  },
+  {
+    id: "team-chat",
+    title: "Collaborate with team",
+    description: "Team messaging, notifications, updates",
+    icon: MessageSquare,
+    category: "Communication",
+    tools: [
+      {
+        id: "slack",
+        name: "Slack",
+        auto: true,
+        reason: "Team communication hub",
+        config: { command: "npx", args: ["-y", "slack-mcp"] }
+      },
+      {
+        id: "discord",
+        name: "Discord",
+        reason: "Community and team chat",
+        config: { command: "npx", args: ["-y", "discord-mcp"] }
+      },
+    ]
+  },
+  {
+    id: "automate-workflows",
+    title: "Automate business workflows",
+    description: "Triggers, sequences, multi-step automations",
+    icon: Zap,
+    category: "Automation",
+    tools: [
+      {
+        id: "rocket-plus",
+        name: "Rocket+",
+        auto: true,
+        reason: "RocketFlow automation engine with 56+ tools",
+        config: { command: "npx", args: ["-y", "rocket-plus-mcp"] }
+      },
+    ]
+  },
+];
+
+type Step = "welcome" | "outcomes" | "tools" | "generating" | "complete";
 
 export default function Home() {
   const [step, setStep] = useState<Step>("welcome");
-  const [role, setRole] = useState<Role>(null);
-  const [selectedTools, setSelectedTools] = useState<string[]>([]);
+  const [selectedOutcomes, setSelectedOutcomes] = useState<string[]>([]);
+  const [toolSelections, setToolSelections] = useState<Record<string, string>>({});
+  const [expandedOutcome, setExpandedOutcome] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
-  // Suggested tools based on role
-  const getSuggestedTools = (role: Role): string[] => {
-    switch (role) {
-      case "business":
-        return ["analytics", "crm", "payments", "email"];
-      case "marketer":
-        return ["analytics", "email", "crm", "docs"];
-      case "developer":
-        return ["database", "hosting", "docs", "analytics"];
-      case "manager":
-        return ["crm", "calendar", "docs", "analytics"];
-      default:
-        return [];
-    }
+  // Get tools for selected outcomes
+  const getSelectedOutcomeData = () => {
+    return OUTCOMES.filter(o => selectedOutcomes.includes(o.id));
   };
 
-  // Generate the MCP config JSON
+  // Initialize tool selections with AUTO defaults
+  const initializeToolSelections = () => {
+    const selections: Record<string, string> = {};
+    selectedOutcomes.forEach(outcomeId => {
+      const outcome = OUTCOMES.find(o => o.id === outcomeId);
+      if (outcome) {
+        const autoTool = outcome.tools.find(t => t.auto);
+        selections[outcomeId] = autoTool?.id || outcome.tools[0].id;
+      }
+    });
+    setToolSelections(selections);
+  };
+
+  // Generate config based on selections
   const generateConfig = () => {
     const mcpServers: Record<string, object> = {};
+    const usedTools = new Set<string>();
 
-    selectedTools.forEach(toolKey => {
-      const tool = MCP_TOOLS[toolKey as keyof typeof MCP_TOOLS];
-      if (tool) {
+    selectedOutcomes.forEach(outcomeId => {
+      const outcome = OUTCOMES.find(o => o.id === outcomeId);
+      const selectedToolId = toolSelections[outcomeId];
+      const tool = outcome?.tools.find(t => t.id === selectedToolId);
+
+      if (tool && !usedTools.has(tool.id)) {
+        usedTools.add(tool.id);
         mcpServers[tool.id] = {
-          type: "stdio",
+          type: tool.config.type || "stdio",
           ...tool.config,
-          env: {}
+          env: tool.config.env || {}
         };
       }
     });
@@ -158,31 +392,35 @@ export default function Home() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const toggleTool = (toolKey: string) => {
-    setSelectedTools(prev =>
-      prev.includes(toolKey)
-        ? prev.filter(t => t !== toolKey)
-        : [...prev, toolKey]
+  const toggleOutcome = (outcomeId: string) => {
+    setSelectedOutcomes(prev =>
+      prev.includes(outcomeId)
+        ? prev.filter(id => id !== outcomeId)
+        : [...prev, outcomeId]
     );
   };
 
-  // Progress percentage
   const getProgress = () => {
     switch (step) {
       case "welcome": return 0;
-      case "role": return 25;
-      case "tools": return 50;
-      case "generating": return 75;
+      case "outcomes": return 33;
+      case "tools": return 66;
+      case "generating": return 85;
       case "complete": return 100;
     }
   };
 
+  // Count Rocket+ selections
+  const getRocketPlusCount = () => {
+    return Object.values(toolSelections).filter(t => t === "rocket-plus").length;
+  };
+
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-gradient-radial">
       {/* Header */}
       <header className="border-b border-zinc-800 bg-zinc-950/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2 logo-pulse cursor-pointer">
+          <div className="flex items-center gap-2 logo-pulse cursor-pointer" onClick={() => setStep("welcome")}>
             <Zap className="w-8 h-8 text-orange-500" />
             <span className="text-xl font-bold">
               MCP<span className="gradient-text">Blitz</span>
@@ -209,16 +447,13 @@ export default function Home() {
       {/* Progress Bar */}
       {step !== "welcome" && (
         <div className="h-1 bg-zinc-800">
-          <div
-            className="h-full progress-fill"
-            style={{ width: `${getProgress()}%` }}
-          />
+          <div className="h-full progress-fill" style={{ width: `${getProgress()}%` }} />
         </div>
       )}
 
       {/* Main Content */}
       <main className="flex-1 flex items-center justify-center p-4">
-        <div className="w-full max-w-2xl">
+        <div className="w-full max-w-3xl">
 
           {/* Step: Welcome */}
           {step === "welcome" && (
@@ -228,23 +463,23 @@ export default function Home() {
                   <Zap className="w-10 h-10 text-white" />
                 </div>
                 <h1 className="text-4xl font-bold mb-4">
-                  Connect AI to Your Tools
+                  What do you want AI to help with?
                 </h1>
                 <p className="text-xl text-zinc-400 max-w-md mx-auto">
-                  In 5 minutes, your AI will have access to your analytics, database, CRM, and more.
+                  Tell us your goals. We&apos;ll connect the right tools automatically.
                 </p>
               </div>
 
               <div className="flex flex-col gap-4 items-center">
                 <button
-                  onClick={() => setStep("role")}
+                  onClick={() => setStep("outcomes")}
                   className="btn-glow px-8 py-4 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl font-semibold text-lg flex items-center gap-2 hover:opacity-90 transition-opacity"
                 >
-                  Start Setup
+                  Let&apos;s Go
                   <ArrowRight className="w-5 h-5" />
                 </button>
                 <p className="text-sm text-zinc-500">
-                  Free tools included • No credit card required
+                  No coding required • 2 minute setup
                 </p>
               </div>
 
@@ -255,78 +490,41 @@ export default function Home() {
             </div>
           )}
 
-          {/* Step: Role Selection */}
-          {step === "role" && (
+          {/* Step: Select Outcomes */}
+          {step === "outcomes" && (
             <div className="wizard-enter">
               <h2 className="text-2xl font-bold mb-2 text-center">
-                What describes you best?
+                What do you want to do?
               </h2>
               <p className="text-zinc-400 text-center mb-8">
-                We&apos;ll suggest the best tools for your workflow
+                Select everything you want AI to help with
               </p>
 
-              <div className="grid grid-cols-2 gap-4">
-                {[
-                  { id: "business", label: "I run a business", icon: Users, desc: "Analytics, CRM, payments" },
-                  { id: "marketer", label: "I'm a marketer", icon: BarChart3, desc: "Analytics, email, content" },
-                  { id: "developer", label: "I'm a developer", icon: Terminal, desc: "Database, hosting, docs" },
-                  { id: "manager", label: "I manage a team", icon: Calendar, desc: "CRM, calendar, docs" },
-                ].map((option) => (
-                  <button
-                    key={option.id}
-                    onClick={() => {
-                      setRole(option.id as Role);
-                      setSelectedTools(getSuggestedTools(option.id as Role));
-                      setStep("tools");
-                    }}
-                    className="tool-card p-6 rounded-xl text-left hover:border-orange-500/50 transition-all"
-                  >
-                    <option.icon className="w-8 h-8 text-orange-500 mb-3" />
-                    <div className="font-semibold mb-1">{option.label}</div>
-                    <div className="text-sm text-zinc-500">{option.desc}</div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Step: Tool Selection */}
-          {step === "tools" && (
-            <div className="wizard-enter">
-              <h2 className="text-2xl font-bold mb-2 text-center">
-                Select your tools
-              </h2>
-              <p className="text-zinc-400 text-center mb-8">
-                We&apos;ve suggested tools for you. Customize as needed.
-              </p>
-
-              <div className="grid grid-cols-2 gap-3 mb-8">
-                {Object.entries(MCP_TOOLS).map(([key, tool]) => {
-                  const Icon = tool.icon;
-                  const isSelected = selectedTools.includes(key);
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-8">
+                {OUTCOMES.map((outcome) => {
+                  const Icon = outcome.icon;
+                  const isSelected = selectedOutcomes.includes(outcome.id);
+                  const hasRocketPlus = outcome.tools.some(t => t.id === "rocket-plus" && t.auto);
 
                   return (
                     <button
-                      key={key}
-                      onClick={() => toggleTool(key)}
-                      className={`tool-card p-4 rounded-xl text-left flex items-start gap-3 ${isSelected ? 'selected' : ''}`}
+                      key={outcome.id}
+                      onClick={() => toggleOutcome(outcome.id)}
+                      className={`tool-card p-4 rounded-xl text-left transition-all ${isSelected ? 'selected' : ''}`}
                     >
-                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${isSelected ? 'bg-orange-500/20' : 'bg-zinc-800'}`}>
-                        <Icon className={`w-5 h-5 ${isSelected ? 'text-orange-500' : 'text-zinc-400'}`} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium">{tool.name}</span>
-                          {tool.free ? (
-                            <span className="text-xs px-1.5 py-0.5 rounded bg-green-500/20 text-green-400">FREE</span>
-                          ) : (
-                            <span className="text-xs px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-400">PRO</span>
-                          )}
+                      <div className="flex items-start justify-between mb-2">
+                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${isSelected ? 'bg-orange-500/20' : 'bg-zinc-800'}`}>
+                          <Icon className={`w-5 h-5 ${isSelected ? 'text-orange-500' : 'text-zinc-400'}`} />
                         </div>
-                        <div className="text-sm text-zinc-500 truncate">{tool.description}</div>
+                        {isSelected && <Check className="w-5 h-5 text-orange-500" />}
                       </div>
-                      {isSelected && (
-                        <Check className="w-5 h-5 text-orange-500 shrink-0" />
+                      <div className="font-medium text-sm mb-1">{outcome.title}</div>
+                      <div className="text-xs text-zinc-500 line-clamp-2">{outcome.description}</div>
+                      {hasRocketPlus && (
+                        <div className="mt-2 flex items-center gap-1">
+                          <Rocket className="w-3 h-3 text-orange-500" />
+                          <span className="text-xs text-orange-500">Rocket+ powered</span>
+                        </div>
                       )}
                     </button>
                   );
@@ -335,7 +533,118 @@ export default function Home() {
 
               <div className="flex gap-3">
                 <button
-                  onClick={() => setStep("role")}
+                  onClick={() => setStep("welcome")}
+                  className="px-6 py-3 rounded-xl border border-zinc-700 text-zinc-400 hover:bg-zinc-800 transition-colors"
+                >
+                  Back
+                </button>
+                <button
+                  onClick={() => {
+                    initializeToolSelections();
+                    setStep("tools");
+                  }}
+                  disabled={selectedOutcomes.length === 0}
+                  className="flex-1 px-6 py-3 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
+                >
+                  Continue with {selectedOutcomes.length} selected
+                  <ArrowRight className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Step: Tool Selection */}
+          {step === "tools" && (
+            <div className="wizard-enter">
+              <h2 className="text-2xl font-bold mb-2 text-center">
+                Review your AI toolkit
+              </h2>
+              <p className="text-zinc-400 text-center mb-2">
+                We&apos;ve selected the best tools. Customize if needed.
+              </p>
+              {getRocketPlusCount() > 0 && (
+                <div className="text-center mb-6">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-500/10 text-orange-500 text-sm">
+                    <Rocket className="w-4 h-4" />
+                    {getRocketPlusCount()} task{getRocketPlusCount() > 1 ? 's' : ''} powered by Rocket+ (56+ tools)
+                  </span>
+                </div>
+              )}
+
+              <div className="space-y-3 mb-8">
+                {getSelectedOutcomeData().map((outcome) => {
+                  const Icon = outcome.icon;
+                  const selectedToolId = toolSelections[outcome.id];
+                  const selectedTool = outcome.tools.find(t => t.id === selectedToolId);
+                  const isExpanded = expandedOutcome === outcome.id;
+
+                  return (
+                    <div key={outcome.id} className="bg-zinc-900 rounded-xl border border-zinc-800 overflow-hidden">
+                      <button
+                        onClick={() => setExpandedOutcome(isExpanded ? null : outcome.id)}
+                        className="w-full p-4 flex items-center justify-between hover:bg-zinc-800/50 transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-zinc-800 flex items-center justify-center">
+                            <Icon className="w-5 h-5 text-orange-500" />
+                          </div>
+                          <div className="text-left">
+                            <div className="font-medium">{outcome.title}</div>
+                            <div className="text-sm text-zinc-500 flex items-center gap-2">
+                              {selectedTool?.id === "rocket-plus" && <Rocket className="w-3 h-3 text-orange-500" />}
+                              {selectedTool?.name}
+                              {selectedTool?.auto && (
+                                <span className="flex items-center gap-1 text-xs text-green-500">
+                                  <Star className="w-3 h-3" /> AI Pick
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        {isExpanded ? (
+                          <ChevronUp className="w-5 h-5 text-zinc-500" />
+                        ) : (
+                          <ChevronDown className="w-5 h-5 text-zinc-500" />
+                        )}
+                      </button>
+
+                      {isExpanded && (
+                        <div className="px-4 pb-4 space-y-2">
+                          {outcome.tools.map((tool) => (
+                            <button
+                              key={tool.id}
+                              onClick={() => setToolSelections(prev => ({ ...prev, [outcome.id]: tool.id }))}
+                              className={`w-full p-3 rounded-lg border text-left transition-all ${
+                                selectedToolId === tool.id
+                                  ? 'border-orange-500 bg-orange-500/10'
+                                  : 'border-zinc-700 hover:border-zinc-600'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  {tool.id === "rocket-plus" && <Rocket className="w-4 h-4 text-orange-500" />}
+                                  <span className="font-medium">{tool.name}</span>
+                                  {tool.auto && (
+                                    <span className="px-2 py-0.5 rounded text-xs bg-green-500/20 text-green-400">
+                                      Recommended
+                                    </span>
+                                  )}
+                                </div>
+                                {selectedToolId === tool.id && <Check className="w-4 h-4 text-orange-500" />}
+                              </div>
+                              <p className="text-xs text-zinc-500 mt-1">{tool.reason}</p>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setStep("outcomes")}
                   className="px-6 py-3 rounded-xl border border-zinc-700 text-zinc-400 hover:bg-zinc-800 transition-colors"
                 >
                   Back
@@ -345,8 +654,7 @@ export default function Home() {
                     setStep("generating");
                     setTimeout(() => setStep("complete"), 2000);
                   }}
-                  disabled={selectedTools.length === 0}
-                  className="flex-1 px-6 py-3 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
+                  className="flex-1 px-6 py-3 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
                 >
                   Generate My Config
                   <Sparkles className="w-5 h-5" />
@@ -362,10 +670,10 @@ export default function Home() {
                 <Bot className="w-8 h-8 text-orange-500" />
               </div>
               <h2 className="text-2xl font-bold mb-2">
-                Building your AI stack...
+                Building your AI toolkit...
               </h2>
               <p className="text-zinc-400">
-                Configuring {selectedTools.length} tool{selectedTools.length > 1 ? 's' : ''} for optimal performance
+                Connecting {Object.keys(toolSelections).length} capabilities
               </p>
             </div>
           )}
@@ -378,10 +686,10 @@ export default function Home() {
                   <CheckCircle2 className="w-8 h-8 text-green-500" />
                 </div>
                 <h2 className="text-2xl font-bold mb-2">
-                  Your AI Stack is Ready!
+                  Your AI Toolkit is Ready!
                 </h2>
                 <p className="text-zinc-400">
-                  Copy this config to your Claude settings
+                  Copy this config to start using AI with your tools
                 </p>
               </div>
 
@@ -411,17 +719,16 @@ export default function Home() {
                 </pre>
               </div>
 
-              {/* Selected Tools Summary */}
+              {/* What you can do */}
               <div className="mb-6">
-                <h3 className="text-sm font-medium text-zinc-400 mb-3">Included Tools</h3>
+                <h3 className="text-sm font-medium text-zinc-400 mb-3">What you can now do</h3>
                 <div className="flex flex-wrap gap-2">
-                  {selectedTools.map(key => {
-                    const tool = MCP_TOOLS[key as keyof typeof MCP_TOOLS];
-                    const Icon = tool.icon;
+                  {getSelectedOutcomeData().map(outcome => {
+                    const Icon = outcome.icon;
                     return (
-                      <div key={key} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-800 text-sm">
+                      <div key={outcome.id} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-800 text-sm">
                         <Icon className="w-4 h-4 text-orange-500" />
-                        {tool.name}
+                        {outcome.title}
                       </div>
                     );
                   })}
@@ -433,8 +740,8 @@ export default function Home() {
                 <button
                   onClick={() => {
                     setStep("welcome");
-                    setRole(null);
-                    setSelectedTools([]);
+                    setSelectedOutcomes([]);
+                    setToolSelections({});
                   }}
                   className="px-6 py-3 rounded-xl border border-zinc-700 text-zinc-400 hover:bg-zinc-800 transition-colors"
                 >
@@ -445,7 +752,7 @@ export default function Home() {
                   className="flex-1 px-6 py-3 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
                 >
                   <Download className="w-5 h-5" />
-                  Download Config
+                  Copy Config
                 </button>
               </div>
 
