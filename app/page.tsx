@@ -7,6 +7,7 @@ import {
   CreditCard, FileText, Bot, Sparkles, Download,
   Terminal, Copy, CheckCircle2
 } from "lucide-react";
+import LogoWall from "./components/logo-wall";
 
 // Available MCP tools with their free/paid status
 const MCP_TOOLS = {
@@ -247,15 +248,9 @@ export default function Home() {
                 </p>
               </div>
 
-              {/* Social Proof */}
+              {/* Logo Wall */}
               <div className="mt-16 pt-8 border-t border-zinc-800">
-                <p className="text-zinc-500 text-sm mb-4">Trusted by teams using</p>
-                <div className="flex justify-center gap-8 opacity-50">
-                  <span className="text-zinc-400">Claude</span>
-                  <span className="text-zinc-400">Cursor</span>
-                  <span className="text-zinc-400">VS Code</span>
-                  <span className="text-zinc-400">Windsurf</span>
-                </div>
+                <LogoWall />
               </div>
             </div>
           )}
