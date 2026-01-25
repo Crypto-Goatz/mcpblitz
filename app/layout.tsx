@@ -20,6 +20,7 @@ export const metadata: Metadata = {
     description: "The fastest way to connect AI to your business tools.",
     images: ["/og-image.png"],
   },
+    generator: 'v0.app'
 };
 
 export default function RootLayout({

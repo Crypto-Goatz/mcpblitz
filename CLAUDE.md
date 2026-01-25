@@ -18,10 +18,10 @@ MCPBlitz is the "easy button" for connecting AI to business tools:
 
 ## The Funnel
 
-```
+\`\`\`
 MCPBlitz (Simple)     →     MCPFED (Advanced)     →     Rocket+ (Premium)
 "5 min setup"               "Operations & FOPs"         "56+ CRM tools"
-```
+\`\`\`
 
 ## Tech Stack
 
@@ -32,14 +32,14 @@ MCPBlitz (Simple)     →     MCPFED (Advanced)     →     Rocket+ (Premium)
 
 ## File Structure
 
-```
+\`\`\`
 mcpblitz/
 ├── app/
 │   ├── layout.tsx      # Dark theme, metadata
 │   ├── page.tsx        # Wizard component
 │   └── globals.css     # Custom styles
 └── public/             # Assets
-```
+\`\`\`
 
 ## MCP Tools Available
 
@@ -65,10 +65,10 @@ mcpblitz/
 
 ## Development
 
-```bash
+\`\`\`bash
 cd /Users/rocketopp/Desktop/GitHub/mcpblitz
 npm run dev
-```
+\`\`\`
 
 ## Deployment
 
